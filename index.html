@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Testando Microfone</title>
+</head>
+<body>
+    <script>
+        navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream) {
+            console.log("Microfone ativado!");
+        })
+        .catch(function(err) {
+            console.log("Erro ao acessar o microfone: " + err);
+        });
+    </script>
+</body>
+</html>
+Adicionando arquivo HTML para testar microfone
