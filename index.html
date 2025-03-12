@@ -1,16 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Testando Microfone</title>
 </head>
 <body>
+    <h1>Teste de Microfone</h1>
+    <button id="start">Ativar Microfone</button>
+    <p id="status"></p>
+    <audio id="audioPlayer" controls></audio>
+
     <script>
-        navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function(stream) {
-            console.log("Microfone ativado!");
-        })
-        .catch(function(err) {
-            console.log("Erro ao acessar o microfone: " + err);
+        document.getElementById("start").addEventListener("click", function() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function(stream) {
+                document.getElementById("status").innerText = "Microfone ativado!";
+                console.log("Microfone ativado!");
+
+                // Opcional: Gravar o áudio
+                const mediaRecorder = new MediaRecorder(stream);
+                let audioChunks = [];
+
+                mediaRecorder.ondataavailable = function(event) {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = function() {
+                    const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    document.getElementById("audioPlayer").src = audioUrl;
+                };
+
+                mediaRecorder.start();
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                }, 5000); // Grava por 5 segundos
+
+            })
+            .catch(function(err) {
+                document.getElementById("status").innerText = "Erro ao acessar o microfone: " + err;
+                console.log("Erro ao acessar o microfone: " + err);
+            });
         });
     </script>
 </body>
