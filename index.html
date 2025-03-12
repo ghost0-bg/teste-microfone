@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Testando Microfone</title>
+    <title>Gravação de Áudio</title>
 </head>
 <body>
     <h1>Teste de Microfone</h1>
@@ -26,6 +26,7 @@
     <script>
         let mediaRecorder;
         let audioChunks = [];
+        let isRecording = false; // Flag para evitar múltiplas gravações ao mesmo tempo
 
         function startMicrophone() {
             navigator.mediaDevices.getUserMedia({ audio: true })
@@ -34,7 +35,7 @@
                 console.log("Microfone ativado!");
 
                 mediaRecorder = new MediaRecorder(stream);
-
+                
                 mediaRecorder.ondataavailable = function(event) {
                     if (event.data.size > 0) {
                         audioChunks.push(event.data);
@@ -43,7 +44,7 @@
 
                 mediaRecorder.onstop = function() {
                     if (audioChunks.length > 0) {
-                        const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+                        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
                         saveAudio(audioBlob);
                         audioChunks = []; // Limpa para a próxima gravação
                     }
@@ -54,15 +55,19 @@
             })
             .catch(function(err) {
                 document.getElementById("status").innerText = "Erro ao acessar o microfone: " + err;
-                console.log("Erro ao acessar o microfone: " + err);
+                console.error("Erro ao acessar o microfone:", err);
             });
         }
 
         function startRecording() {
-            if (mediaRecorder && mediaRecorder.state === "inactive") {
+            if (mediaRecorder && mediaRecorder.state === "inactive" && !isRecording) {
+                isRecording = true; // Evita gravações duplicadas
                 mediaRecorder.start();
                 setTimeout(() => {
-                    mediaRecorder.stop();
+                    if (mediaRecorder.state === "recording") {
+                        mediaRecorder.stop();
+                        isRecording = false;
+                    }
                 }, 30000); // Agora grava a cada 30 segundos
             }
         }
