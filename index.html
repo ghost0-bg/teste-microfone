@@ -26,7 +26,7 @@
     <script>
         let mediaRecorder;
         let audioChunks = [];
-        let isRecording = false; // Flag para evitar múltiplas gravações ao mesmo tempo
+        let isRecording = false;
 
         function startMicrophone() {
             navigator.mediaDevices.getUserMedia({ audio: true })
@@ -46,9 +46,9 @@
                     if (audioChunks.length > 0) {
                         const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
                         saveAudio(audioBlob);
-                        audioChunks = []; // Limpa para a próxima gravação
+                        audioChunks = [];
                     }
-                    startRecording(); // Reinicia a gravação automaticamente
+                    startRecording();
                 };
 
                 startRecording();
@@ -61,24 +61,36 @@
 
         function startRecording() {
             if (mediaRecorder && mediaRecorder.state === "inactive" && !isRecording) {
-                isRecording = true; // Evita gravações duplicadas
+                isRecording = true;
                 mediaRecorder.start();
                 setTimeout(() => {
                     if (mediaRecorder.state === "recording") {
                         mediaRecorder.stop();
                         isRecording = false;
                     }
-                }, 30000); // Agora grava a cada 30 segundos
+                }, 30000); // Grava a cada 30 segundos
             }
         }
 
         function saveAudio(blob) {
             const url = URL.createObjectURL(blob);
             const li = document.createElement("li");
+
+            // Criando o player de áudio
             const audioElement = document.createElement("audio");
             audioElement.controls = true;
             audioElement.src = url;
+
+            // Criando o botão de download
+            const downloadButton = document.createElement("a");
+            downloadButton.href = url;
+            downloadButton.download = "audio_gravado.webm";
+            downloadButton.innerText = "Baixar Áudio";
+            downloadButton.style.marginLeft = "10px";
+
+            // Adicionando elementos à lista
             li.appendChild(audioElement);
+            li.appendChild(downloadButton);
             document.getElementById("audioList").appendChild(li);
         }
 
