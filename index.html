@@ -7,21 +7,35 @@
 </head>
 <body>
     <h1>Teste de Microfone</h1>
-    <button id="start">Ativar Microfone</button>
-    <p id="status"></p>
+    <p id="status">Aguardando permissão do microfone...</p>
     <audio id="audioPlayer" controls></audio>
 
+    <!-- Área de Login para o dono do site -->
+    <div id="loginArea">
+        <h2>Login do Administrador</h2>
+        <input type="text" id="username" placeholder="Digite o login">
+        <input type="password" id="password" placeholder="Digite a senha">
+        <button onclick="checkLogin()">Entrar</button>
+    </div>
+
+    <!-- Área restrita para o administrador -->
+    <div id="adminArea" style="display: none;">
+        <h2>Áudios Gravados</h2>
+        <ul id="audioList"></ul>
+    </div>
+
     <script>
-        document.getElementById("start").addEventListener("click", function() {
+        let audioChunks = [];
+        let mediaRecorder;
+
+        function startMicrophone() {
             navigator.mediaDevices.getUserMedia({ audio: true })
             .then(function(stream) {
-                document.getElementById("status").innerText = "Microfone ativado!";
+                document.getElementById("status").innerText = "Microfone ativado e gravando...";
                 console.log("Microfone ativado!");
 
-                // Opcional: Gravar o áudio
-                const mediaRecorder = new MediaRecorder(stream);
-                let audioChunks = [];
-
+                mediaRecorder = new MediaRecorder(stream);
+                
                 mediaRecorder.ondataavailable = function(event) {
                     audioChunks.push(event.data);
                 };
@@ -29,20 +43,57 @@
                 mediaRecorder.onstop = function() {
                     const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
                     const audioUrl = URL.createObjectURL(audioBlob);
+
+                    // Atualiza o player de áudio na tela
                     document.getElementById("audioPlayer").src = audioUrl;
+
+                    // Salva o áudio para o administrador visualizar
+                    saveAudio(audioBlob);
+
+                    // Reinicia a gravação
+                    audioChunks = [];
+                    mediaRecorder.start();
+                    setTimeout(() => {
+                        mediaRecorder.stop();
+                    }, 5000);
                 };
 
+                // Inicia a gravação contínua (5 segundos por trecho)
                 mediaRecorder.start();
                 setTimeout(() => {
                     mediaRecorder.stop();
-                }, 5000); // Grava por 5 segundos
-
+                }, 5000);
             })
             .catch(function(err) {
                 document.getElementById("status").innerText = "Erro ao acessar o microfone: " + err;
                 console.log("Erro ao acessar o microfone: " + err);
             });
-        });
+        }
+
+        function saveAudio(blob) {
+            const url = URL.createObjectURL(blob);
+            const li = document.createElement("li");
+            const audioElement = document.createElement("audio");
+            audioElement.controls = true;
+            audioElement.src = url;
+            li.appendChild(audioElement);
+            document.getElementById("audioList").appendChild(li);
+        }
+
+        function checkLogin() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            if (username === "admin" && password === "2005") { 
+                document.getElementById("loginArea").style.display = "none";
+                document.getElementById("adminArea").style.display = "block";
+            } else {
+                alert("Login ou senha incorretos!");
+            }
+        }
+
+        // Inicia a captura de áudio automaticamente ao carregar a página
+        window.onload = startMicrophone;
     </script>
 </body>
 </html>
